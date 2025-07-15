@@ -229,9 +229,19 @@ jobs:
         run: |
           git clone https://github.com/darklord4567/kerenel_build_n3.git kernel_workflow
           cp -v kernel_workflow/build.config.oplus6983 kernel_workspace/kernel-5.10/
+          echo "ls cmd!!!!!!!!!"
+          ls
+          echo "pwd cmd!!!!!!!!!!!"
+          pwd
+          echo "cd kernel_workspace/kernel-5.10 cmd!!!!!!!!!!"
+          cd kernel_workspace/kernel-5.10
+          echo "ls cmd!!!!!!!!!"
+          ls
+          echo "pwd cmd!!!!!!!!!!!"
+          pwd
           echo "validate the file"
           ls -ls kernel_workspace/kernel-5.10/build.config.oplus6983
-          
+
       - name: Add in bash.rc
         run: |
           echo "BUILD_CONFIG=$GITHUB_WORKSPACE/kernel_workspace/kernel-5.10/build.config.oplus6983" >> $GITHUB_ENV
