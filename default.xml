@@ -19,6 +19,6 @@
 
   <project path="kernel-5.10" name="android_kernel_5.10_oneplus_mt6983" remote="github" revision="oneplus/mt6983_v_15.0.0_ace_2v" clone-depth="1" />
 
-  <project path="vendor" name="android_kernel_modules_oneplus_mt6983" remote="github" revision="oneplus/mt6983_v_15.0.0_ace_2v" />
+  <project path="kernel_module" name="android_kernel_modules_oneplus_mt6983" remote="github" revision="oneplus/mt6983_v_15.0.0_ace_2v" />
 
 </manifest>
