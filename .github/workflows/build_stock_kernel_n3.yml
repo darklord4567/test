@@ -245,7 +245,7 @@ jobs:
 
       - name: Add in bash.rc
         run: |
-          echo "BUILD_CONFIG=$GITHUB_WORKSPACE/kernel_workspace/kernel-5.10/build.config.oplus6983" >> $GITHUB_ENV
+          echo "BUILD_CONFIG=kernel-5.10/build.config.oplus6983" >> $GITHUB_ENV
 
       # - name: Vendor Issue Fix
       #   run: |
