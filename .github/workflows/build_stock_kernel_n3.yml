@@ -203,29 +203,35 @@ jobs:
           repo init -u https://github.com/darklord4567/test.git -m ${{ github.event.inputs.FILE }}.xml --depth=1
           repo sync -c -j$(nproc --all) --no-tags --no-clone-bundle --force-sync
 
+      # - name: Copy Build Configuration
+      #   run: |
+      #     echo "pwd cmd"
+      #     pwd
+      #     echo "ls cmd"
+      #     ls
+      #     echo "cd kernel_workspace CMD!!!!!!!!!"
+      #     cd kernel_workspace
+      #     echo "pwd cmd!!!!!!!!!!!!!!!"
+      #     pwd
+      #     echo "ls cmd!!!!!!!!!!!!!!!!!"
+      #     ls
+      #     git clone https://github.com/darklord4567/kerenel_build_n3.git build_config
+      #     cp -v build_config/build.config.oplus6983 kernel-5.10/
+      #     echo "cd kernel-5.10 cmd"
+      #     cd kernel-5.10
+      #     echo "ls cmd"
+      #     ls
+      #     echo "pwd cmd"
+      #     pwd
+      #     echo "validate the file"
+      #     ls -ls kernel_workspace/kernel-5.10/build.config.oplus6983
       - name: Copy Build Configuration
         run: |
-          echo "pwd cmd"
-          pwd
-          echo "ls cmd"
-          ls
-          echo "cd kernel_workspace CMD!!!!!!!!!"
-          cd kernel_workspace
-          echo "pwd cmd!!!!!!!!!!!!!!!"
-          pwd
-          echo "ls cmd!!!!!!!!!!!!!!!!!"
-          ls
-          git clone https://github.com/darklord4567/kerenel_build_n3.git build_config
-          cp -v build_config/build.config.oplus6983 kernel-5.10/
-          echo "cd kernel-5.10 cmd"
-          cd kernel-5.10
-          echo "ls cmd"
-          ls
-          echo "pwd cmd"
-          pwd
+          git clone https://github.com/darklord4567/kerenel_build_n3.git kernel_workflow
+          cp -v kernel_workflow/build.config.oplus6983 kernel_workspace/kernel-5.10/
           echo "validate the file"
           ls -ls kernel_workspace/kernel-5.10/build.config.oplus6983
-
+          
       - name: Add in bash.rc
         run: |
           echo "BUILD_CONFIG=$GITHUB_WORKSPACE/kernel_workspace/kernel-5.10/build.config.oplus6983" >> $GITHUB_ENV
