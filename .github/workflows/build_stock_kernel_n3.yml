@@ -297,11 +297,16 @@ jobs:
           pwd
           echo "ls"
           ls
+          echo "cd & make file"
           cd vendor/oplus/kernel/cpu/thermal && \touch Makefile && \
           echo "obj-y += horae_shell_temp" > Makefile && \
           echo "obj-y += oplus_ipa_thermal" >> Makefile
           echo "THERMAL MAKEFILE!!!!!!!!!!!!"
-          cat vendor/oplus/kernel/cpu/thermal/Makefile
+          echo "pwd"
+          pwd
+          echo "ls"
+          ls
+          cat Makefile
 
       # # Custom kernel suffix
       # - name: Custom Kernel Suffix if set
