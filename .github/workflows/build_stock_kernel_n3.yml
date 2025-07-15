@@ -284,6 +284,12 @@ jobs:
           ls
           echo "rm -rf kernel_module"
           rm -rf kernel_module
+          
+      - name: Create thermal Makefile
+        run: |
+          cd vendor/oplus/kernel/cpu/thermal && \touch Makefile && \
+          echo "obj-y += horae_shell_temp" > Makefile && \
+          echo "obj-y += oplus_ipa_thermal" >> Makefile
 
       # # Custom kernel suffix
       # - name: Custom Kernel Suffix if set
