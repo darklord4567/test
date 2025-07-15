@@ -240,7 +240,8 @@ jobs:
           echo "pwd cmd!!!!!!!!!!!"
           pwd
           echo "validate the file"
-          ls -ls kernel_workspace/kernel-5.10/build.config.oplus6983
+          ls -ls build.config.oplus6983
+
 
       - name: Add in bash.rc
         run: |
