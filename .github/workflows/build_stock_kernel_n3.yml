@@ -273,10 +273,6 @@ jobs:
           ls
           echo "moving every thing one dir up"
           mv kernel_module/vendor .
-          mv kernel_module/kernel .
-          mv kernel_module/kernel-5.15 .
-          mv kernel_module/kernel-4.19 .
-          mv kernel_module/kernel-4.14 .
           echo "pwd"
           pwd
           echo "ls"
