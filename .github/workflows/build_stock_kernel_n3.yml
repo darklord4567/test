@@ -404,9 +404,9 @@ jobs:
           #   LD=/usr/bin/ld.lld HOSTLD=/usr/bin/ld.lld KCFLAGS+='-Wno-error -Wno-error=strict-prototypes'"
 
           # 5. Add LLVM_IAS if needed for kernel 5.10
-          if [[ "${{ env.KERNEL_VERSION }}" == "5.10" ]]; then
-            MAKE_ARGS="LLVM_IAS=1 $MAKE_ARGS"
-          fi
+          #if [[ "${{ env.KERNEL_VERSION }}" == "5.10" ]]; then
+          #  MAKE_ARGS="LLVM_IAS=1 $MAKE_ARGS"
+          #fi
 
           # 6. Run the build
           # make -j$(nproc --all) O=out $MAKE_ARGS gki_defconfig
