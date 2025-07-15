@@ -378,7 +378,7 @@ jobs:
           # 6. Run the build
           # make -j$(nproc --all) O=out $MAKE_ARGS gki_defconfig
           # make -j$(nproc --all) O=out $MAKE_ARGS
-          ./buil.sh
+          ./build.sh
           ccache -s
 
 
