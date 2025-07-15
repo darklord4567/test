@@ -394,8 +394,12 @@ jobs:
           # export CC="ccache clang"
 
           # # 3. Change to the correct kernel source directory
-           cd kernel_workspace/build/
+           echo "cd kernel_workspace/ !!!!!!!!"
+           cd kernel_workspace/
+           echo "pwd cmd !!!!!!!"
            pwd
+           echo "ls cmd !!!!!!!!!"
+           ls
 
           # # 4. Define the build arguments with corrected paths and syntax
           # MAKE_ARGS="LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
@@ -410,7 +414,7 @@ jobs:
           # 6. Run the build
           # make -j$(nproc --all) O=out $MAKE_ARGS gki_defconfig
           # make -j$(nproc --all) O=out $MAKE_ARGS
-          ./build.sh
+          ./build/build.sh
           ccache -s
 
 
