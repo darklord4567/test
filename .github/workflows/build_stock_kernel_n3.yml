@@ -89,27 +89,27 @@ jobs:
             echo "BUILD_METHOD=gki" >> $GITHUB_ENV
           fi
 
-      - name: Check Disk Space
-        run: df -h
+      # - name: Check Disk Space
+      #   run: df -h
 
-      - name: Maximize Build Space
-        uses: easimon/maximize-build-space@master
-        with:
-          root-reserve-mb: 8192
-          temp-reserve-mb: 2048
-          remove-dotnet: 'true'
-          remove-android: 'true'
-          remove-haskell: 'true'
-          remove-codeql: 'true'
+      # - name: Maximize Build Space
+      #   uses: easimon/maximize-build-space@master
+      #   with:
+      #     root-reserve-mb: 8192
+      #     temp-reserve-mb: 2048
+      #     remove-dotnet: 'true'
+      #     remove-android: 'true'
+      #     remove-haskell: 'true'
+      #     remove-codeql: 'true'
 
-      - name: Create and Enable 3G Swap
-        run: |
-          sudo swapoff -a
-          sudo fallocate -l 3G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-          free -h
+      # - name: Create and Enable 3G Swap
+      #   run: |
+      #     sudo swapoff -a
+      #     sudo fallocate -l 3G /swapfile
+      #     sudo chmod 600 /swapfile
+      #     sudo mkswap /swapfile
+      #     sudo swapon /swapfile
+      #     free -h
 
       - name: Set Cache Environment
         run: |
@@ -167,29 +167,29 @@ jobs:
           sudo apt install -y libelf-dev ccache llvm lld
           sudo apt update -qq
 
-      - name: Restore Ccache
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ runner.os }}-${{ github.ref_name }}-${{ github.event.inputs.FILE }}-${{ env.BUILD_METHOD }}-${{ github.event.inputs.FAST_BUILD == 'true' && 'alpha' || 'beta' }}-15
+      # - name: Restore Ccache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ${{ env.CCACHE_DIR }}
+      #     key: ccache-${{ runner.os }}-${{ github.ref_name }}-${{ github.event.inputs.FILE }}-${{ env.BUILD_METHOD }}-${{ github.event.inputs.FAST_BUILD == 'true' && 'alpha' || 'beta' }}-15
 
-      - name: Initialize Ccache
-        run: |
-          INIT_FLAG="${{ env.CCACHE_DIR }}/.ccache_initialized"
-          if command -v ccache >/dev/null 2>&1; then
-            if [ ! -f "$INIT_FLAG" ]; then
-              echo "Initializing ccache (${{ env.CCACHE_DIR }})..."
-              mkdir -p "${{ env.CCACHE_DIR }}"
-              ccache -M ${{ env.CCACHE_MAXSIZE }}
-              touch "$INIT_FLAG"
-              echo "ccache initialization complete"
-            else
-              echo "ccache already initialized, skipping"
-            fi
-          else
-            echo "ccache not installed, skipping"
-          fi
-          ccache -s
+      # - name: Initialize Ccache
+      #   run: |
+      #     INIT_FLAG="${{ env.CCACHE_DIR }}/.ccache_initialized"
+      #     if command -v ccache >/dev/null 2>&1; then
+      #       if [ ! -f "$INIT_FLAG" ]; then
+      #         echo "Initializing ccache (${{ env.CCACHE_DIR }})..."
+      #         mkdir -p "${{ env.CCACHE_DIR }}"
+      #         ccache -M ${{ env.CCACHE_MAXSIZE }}
+      #         touch "$INIT_FLAG"
+      #         echo "ccache initialization complete"
+      #       else
+      #         echo "ccache already initialized, skipping"
+      #       fi
+      #     else
+      #       echo "ccache not installed, skipping"
+      #     fi
+      #     ccache -s
 
       - name: Install Repo Tool
         run: |
