@@ -207,7 +207,9 @@ jobs:
         run: |
           echo "pwd cmd"
           pwd
-          git clone https://github.com/darklord4567/kerenel_build_n3.git kernel_workflow
+          echo "ls cmd"
+          ls
+          git clone https://github.com/darklord4567/kerenel_build_n3.git build_config
           cp -v kernel_workflow/build.config.oplus6983 kernel_workspace/kernel-5.10/
           echo "cd kernel-5.10 cmd"
           cd kernel-5.10
@@ -343,22 +345,22 @@ jobs:
             fi
           done
 
-      - name: Enable lto=thin For FAST
-        if: ${{ (env.KERNEL_VERSION == '5.10' || env.KERNEL_VERSION == '5.15') && github.event.inputs.FAST_BUILD == 'true' }}
-        run: |
-          pwd
-          ls
-          cd kernel_workspace
-          pwd
-          ls
-          cd kernel-5.10
-          ls
-          DEFCONFIG=./arch/arm64/configs/gki_defconfig
-          echo "Enabling ThinLTO in $DEFCONFIG"
-          sed -i 's/^CONFIG_LTO=n/CONFIG_LTO=y/' "$DEFCONFIG"
-          sed -i 's/^CONFIG_LTO_CLANG_FULL=y/CONFIG_LTO_CLANG_THIN=y/' "$DEFCONFIG"
-          sed -i 's/^CONFIG_LTO_CLANG_NONE=y/CONFIG_LTO_CLANG_THIN=y/' "$DEFCONFIG"
-          grep -q '^CONFIG_LTO_CLANG_THIN=y' "$DEFCONFIG" || echo 'CONFIG_LTO_CLANG_THIN=y' >> "$DEFCONFIG"
+      # - name: Enable lto=thin For FAST
+      #   if: ${{ (env.KERNEL_VERSION == '5.10' || env.KERNEL_VERSION == '5.15') && github.event.inputs.FAST_BUILD == 'true' }}
+      #   run: |
+      #     pwd
+      #     ls
+      #     cd kernel_workspace
+      #     pwd
+      #     ls
+      #     cd kernel-5.10
+      #     ls
+      #     DEFCONFIG=./arch/arm64/configs/gki_defconfig
+      #     echo "Enabling ThinLTO in $DEFCONFIG"
+      #     sed -i 's/^CONFIG_LTO=n/CONFIG_LTO=y/' "$DEFCONFIG"
+      #     sed -i 's/^CONFIG_LTO_CLANG_FULL=y/CONFIG_LTO_CLANG_THIN=y/' "$DEFCONFIG"
+      #     sed -i 's/^CONFIG_LTO_CLANG_NONE=y/CONFIG_LTO_CLANG_THIN=y/' "$DEFCONFIG"
+      #     grep -q '^CONFIG_LTO_CLANG_THIN=y' "$DEFCONFIG" || echo 'CONFIG_LTO_CLANG_THIN=y' >> "$DEFCONFIG"
 
       - name: Build Kernel FAST
         if: ${{ github.event.inputs.FAST_BUILD == 'true' }}
