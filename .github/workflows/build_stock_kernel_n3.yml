@@ -216,7 +216,7 @@ jobs:
           echo "ls cmd!!!!!!!!!!!!!!!!!"
           ls
           git clone https://github.com/darklord4567/kerenel_build_n3.git build_config
-          cp -v build_config/build.config.oplus6983 kernel_workspace/kernel-5.10/
+          cp -v build_config/build.config.oplus6983 kernel-5.10/
           echo "cd kernel-5.10 cmd"
           cd kernel-5.10
           echo "ls cmd"
