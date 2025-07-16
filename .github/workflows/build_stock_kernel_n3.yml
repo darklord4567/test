@@ -490,19 +490,11 @@ jobs:
           ccache -s
 
 
-      - name: Create AnyKernel3 Zip
+      - name: Make AnyKernel3_CROM
         run: |
-          git clone https://github.com/osm0sis/AnyKernel3.git
-
-          # Correct path to the kernel image from the dist directory
-          cp ${{ env.BUILD_OUTPUT_BASE }}/dist/Image.gz AnyKernel3/
-
-          # Correct path to find kernel modules in the kernel-specific output directory
-          mkdir -p AnyKernel3/modules
-          find ${{ env.BUILD_OUTPUT_BASE }}/kernel-5.10/ -type f -name "*.ko" -exec cp -f {} AnyKernel3/modules/ \;
-
-          cd AnyKernel3
-            zip -r9 ../Kernel-OnePlus-Nord-3-${{ steps.suffix_step.outputs.suffix }}.zip * -x .git README.md
+          git clone https://github.com/darklord4567/Anykernel3_AOSP_NORD3.git --depth=1
+          echo "Copying Image.gz to Anykernel3_AOSP_NORD3/"
+          cp kernel_workspace/out/android12-5.10/kernel-5.10/arch/arm64/boot/Image.gz Anykernel3_AOSP_NORD3/Image.gz
 
 
       - name: Set zip Suffix
@@ -510,8 +502,11 @@ jobs:
         run: |
           echo "value=${{ github.event.inputs.VFS == 'true' && '_VFS' || '' }}${{ github.event.inputs.ZRAM == 'true' && '_LZ4KD' || '' }}${{ github.event.inputs.KPM == 'true' && '_KPM' || '' }}${{ github.event.inputs.SCHED== 'true' && '_SCHED' || '' }}" >> $GITHUB_OUTPUT
       
-      - name: Upload Kernel Zip
+      - name: Upload AnyKernel3_CROM
         uses: actions/upload-artifact@v4
         with:
-          name: Kernel-OnePlus-Nord-3-${{ steps.suffix_step.outputs.suffix }}
-          path: Kernel-OnePlus-Nord-3-*.zip
+          name: AnyKernel3_CROM_${{ env.KSUVER }}_${{ steps.file_clean.outputs.value }}${{ steps.suffix.outputs.value }}_LuffyOP⚡
+          path: ./Anykernel3_AOSP_NORD3/*
+
+      - name: Post-build Disk Check
+        run: df -h
