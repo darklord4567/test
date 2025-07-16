@@ -344,21 +344,21 @@ jobs:
           EOF
 
       - name: Fix codec conflict by editing mt6357-accdet.c file
-            run: |
-              echo "pwd"
-              pwd
-              echo "ls"
-              ls
-              echo "cd to codecs !!!!!!!!"
-              cd kernel_workspace/kernel-5.10/sound/soc/codecs/
-              echo "pwd"
-              pwd
-              echo "ls"
-              ls
-              ls -l mt6357-accdet.c
-              sed -i 's/^int accdet_read_audio_res(unsigned int res_value)/int mt6357_accdet_read_audio_res(unsigned int res_value)/' mt6357-accdet.c
-              sed -i 's/^EXPORT_SYMBOL(accdet_read_audio_res);/EXPORT_SYMBOL(mt6357_accdet_read_audio_res);/' mt6357-accdet.c
-              grep -E 'mt6357_accdet_read_audio_res' mt6357-accdet.c
+        run: |
+          echo "pwd"
+          pwd
+          echo "ls"
+          ls
+          echo "cd to codecs !!!!!!!!"
+          cd kernel_workspace/kernel-5.10/sound/soc/codecs/
+          echo "pwd"
+          pwd
+          echo "ls"
+          ls
+          ls -l mt6357-accdet.c
+          sed -i 's/^int accdet_read_audio_res(unsigned int res_value)/int mt6357_accdet_read_audio_res(unsigned int res_value)/' mt6357-accdet.c
+          sed -i 's/^EXPORT_SYMBOL(accdet_read_audio_res);/EXPORT_SYMBOL(mt6357_accdet_read_audio_res);/' mt6357-accdet.c
+          grep -E 'mt6357_accdet_read_audio_res' mt6357-accdet.c
 
       # # Custom kernel suffix
       # - name: Custom Kernel Suffix if set
