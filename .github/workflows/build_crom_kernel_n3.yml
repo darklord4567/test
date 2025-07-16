@@ -419,7 +419,7 @@ jobs:
         if: ${{ github.event.inputs.VFS == 'true' }}
         run: |
           cd kernel_workspace/kernel-5.10
-          cp ../../SukiSU_patch/hooks/syscall_hooks.patch ./
+          cp ../SukiSU_patch/hooks/syscall_hooks.patch ./
           echo "Applying vfs patch"
           patch -p1 -F 3 < syscall_hooks.patch
           echo "vfs_patch complete"
@@ -428,11 +428,11 @@ jobs:
         if: ${{ github.event.inputs.ZRAM == 'true' }}
         run: |
           cd kernel_workspace/kernel-5.10
-          cp ../../SukiSU_patch/other/zram/zram_patch/${{ env.KERNEL_VERSION }}/lz4kd.patch ./
+          cp ../SukiSU_patch/other/zram/zram_patch/${{ env.KERNEL_VERSION }}/lz4kd.patch ./
           echo "Applying lz4kd patch"
           patch -p1 -F 3 < lz4kd.patch || true
           echo 'lz4kd_patch complete'
-          cp ../../SukiSU_patch/other/zram/zram_patch/${{ env.KERNEL_VERSION }}/lz4k_oplus.patch ./
+          cp ../SukiSU_patch/other/zram/zram_patch/${{ env.KERNEL_VERSION }}/lz4k_oplus.patch ./
           echo "Applying lz4k_oplus patch"
           patch -p1 -F 3 < lz4k_oplus.patch || true
           echo 'lz4k_oplus_patch complete'
