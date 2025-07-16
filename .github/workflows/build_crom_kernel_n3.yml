@@ -17,11 +17,6 @@ on:
         description: "Custom kernel suffix (leave empty for a random string)"
         required: false
         default: "LuffyOP⚡"
-      FAST_BUILD:
-        type: boolean
-        description: "Enable fast build?"
-        required: true
-        default: true
       SUSFS_CI:
         type: choice
         description: "SUSFS module download method"
@@ -36,6 +31,11 @@ on:
         description: "Branch name/Custom version identifier"
         required: false
         default: "susfs-main/LuffyOP⚡"
+      FAST_BUILD:
+        type: boolean
+        description: "Enable fast build?"
+        required: true
+        default: true
       VFS:
         type: boolean
         description: "Enable manual hooks (VFS)?"
@@ -46,15 +46,11 @@ on:
         description: "Enable Kernel Patch Module (KPM)?"
         required: true
         default: true
-      ZRAM:
-        type: boolean
-        description: "Add more ZRAM algorithms?"
-        required: true
-        default: false
+
 
 jobs:
   build:
-    name: ${{ github.event.inputs.FAST_BUILD == 'true' && ' [FAST]' || '' }}${{ github.event.inputs.ZRAM == 'true' && ' [ZRAM]' || '' }}For ${{ github.event.inputs.FILE }} ${{ github.event.inputs.SUFFIX }}
+    name: ${{ github.event.inputs.FAST_BUILD == 'true' && ' [FAST]' || '' }}For ${{ github.event.inputs.FILE }} ${{ github.event.inputs.SUFFIX }}
     runs-on: ubuntu-latest
     env:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
@@ -185,7 +181,7 @@ jobs:
           echo "Selected VFS: ${{ github.event.inputs.VFS }}"
           echo "Selected KPM: ${{ github.event.inputs.KPM }}"
           echo "Custom KSU_META: ${{ github.event.inputs.KSU_META }}"
-          echo "Selected ZRAM: ${{ github.event.inputs.ZRAM }}"
+
 
       - name: Install Dependencies
         run: |
@@ -373,13 +369,7 @@ jobs:
           cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ env.ANDROID_VERSION }}-${{ env.KERNEL_VERSION }}.patch ./
           cp ../susfs4ksu/kernel_patches/fs/* ./fs/
           cp ../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
-          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
-            echo "Fetching zram patches"
-            cp -r ../SukiSU_patch/other/zram/lz4k/include/linux/* ./include/linux/
-            cp -r ../SukiSU_patch/other/zram/lz4k/lib/* ./lib/
-            cp -r ../SukiSU_patch/other/zram/lz4k/crypto/* ./crypto/
-            cp -r ../SukiSU_patch/other/zram/lz4k_oplus ./lib/
-          fi
+
 
           GKI_V="${{ env.ANDROID_VERSION }}-${{ env.KERNEL_VERSION }}"
           SUBLEVEL=$(grep '^SUBLEVEL *=' Makefile | head -n1 | cut -d= -f2 | tr -d ' ')
@@ -424,18 +414,6 @@ jobs:
           patch -p1 -F 3 < syscall_hooks.patch
           echo "vfs_patch complete"
 
-      - name: Apply ZRAM
-        if: ${{ github.event.inputs.ZRAM == 'true' }}
-        run: |
-          cd kernel_workspace/kernel-5.10
-          cp ../SukiSU_patch/other/zram/zram_patch/${{ env.KERNEL_VERSION }}/lz4kd.patch ./
-          echo "Applying lz4kd patch"
-          patch -p1 -F 3 < lz4kd.patch || true
-          echo 'lz4kd_patch complete'
-          cp ../SukiSU_patch/other/zram/zram_patch/${{ env.KERNEL_VERSION }}/lz4k_oplus.patch ./
-          echo "Applying lz4k_oplus patch"
-          patch -p1 -F 3 < lz4k_oplus.patch || true
-          echo 'lz4k_oplus_patch complete'
 
       # in short more susfs patches
       - name: Add Configuration Settings
@@ -488,15 +466,6 @@ jobs:
           echo "CONFIG_TCP_ECN=y" >> "$CONFIG_FILE"
           echo "CONFIG_IPV6_ECN=y" >> "$CONFIG_FILE"
           echo "CONFIG_IP_NF_TARGET_ECN=y" >> "$CONFIG_FILE"
-          # ZRAM configuration*
-          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
-            echo "CONFIG_CRYPTO_LZ4HC=y" >> "$CONFIG_FILE"
-            echo "CONFIG_CRYPTO_LZ4K=y" >> "$CONFIG_FILE"
-            echo "CONFIG_CRYPTO_LZ4KD=y" >> "$CONFIG_FILE"
-            echo "CONFIG_CRYPTO_842=y" >> "$CONFIG_FILE"
-            echo "CONFIG_CRYPTO_LZ4K_OPLUS=y" >> "$CONFIG_FILE"
-            echo "CONFIG_ZRAM_WRITEBACK=y" >> "$CONFIG_FILE"
-          fi
           # Remove build review
           sed -i 's/check_defconfig//' ./build.config.gki
 
@@ -554,7 +523,7 @@ jobs:
       - name: Set zip Suffix
         id: suffix
         run: |
-          echo "value=${{ github.event.inputs.VFS == 'true' && '_VFS' || '' }}${{ github.event.inputs.ZRAM == 'true' && '_LZ4KD' || '' }}${{ github.event.inputs.KPM == 'true' && '_KPM' || '' }}${{ github.event.inputs.SCHED== 'true' && '_SCHED' || '' }}" >> $GITHUB_OUTPUT
+          echo "value=${{ github.event.inputs.VFS == 'true' && '_VFS' || '' }}${{ github.event.inputs.KPM == 'true' && '_KPM' || '' }}${{ github.event.inputs.SCHED== 'true' && '_SCHED' || '' }}" >> $GITHUB_OUTPUT
       
       - name: Upload AnyKernel3_CROM
         uses: actions/upload-artifact@v4
