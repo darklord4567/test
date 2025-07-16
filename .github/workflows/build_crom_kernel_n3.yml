@@ -203,7 +203,6 @@ jobs:
           repo init -u https://github.com/darklord4567/test.git -m ${{ github.event.inputs.FILE }}.xml --depth=1
           repo sync -c -j$(nproc --all) --no-tags --no-clone-bundle --force-sync
 
-
       - name: Add in bash.rc
         run: |
           echo "BUILD_CONFIG=kernel-5.10/build.config.oplus6983" >> $GITHUB_ENV
@@ -251,6 +250,7 @@ jobs:
       - name: Custom Kernel Suffix if set
         if: ${{ github.event.inputs.SUFFIX != '' }}
         run: |
+
           cd kernel_workspace
           SUFFIX="${{ github.event.inputs.SUFFIX }}"
           ANDROID_VERSION="${{ env.ANDROID_VERSION }}"
@@ -322,23 +322,20 @@ jobs:
                 perl -0777 -pi -e "s{cat <<EOF}{cat <<EOF\n#undef UTS_VERSION\n#define UTS_VERSION \"#1 SMP PREEMPT $DATESTR\" } unless /UTS_VERSION/" "$f"
               fi
             fi
-          done
-
-
+            done
+            
       - name: Build Kernel FAST
         if: ${{ github.event.inputs.FAST_BUILD == 'true' }}
         id: fast_build
         run: |
-
-           echo "cd kernel_workspace/ !!!!!!!!"
-           cd kernel_workspace/
-           echo "pwd cmd !!!!!!!"
-           pwd
-           echo "ls cmd !!!!!!!!!"
-           ls
-
+          echo "cd kernel_workspace/ !!!!!!!!"
+          cd kernel_workspace/
+          echo "pwd cmd !!!!!!!"
+          pwd
+          echo "ls cmd !!!!!!!!!"
+          ls
           ./build/build.sh
-          ccache -s
+           ccache -s
 
 
       - name: Create AnyKernel3 Zip
@@ -353,15 +350,14 @@ jobs:
           find ${{ env.BUILD_OUTPUT_BASE }}/kernel-5.10/ -type f -name "*.ko" -exec cp -f {} AnyKernel3/modules/ \;
 
           cd AnyKernel3
-          zip -r9 ../Kernel-OnePlus-Nord-3-${{ steps.suffix_step.outputs.suffix }}.zip * -x .git README.md
+            zip -r9 ../Kernel-OnePlus-Nord-3-${{ steps.suffix_step.outputs.suffix }}.zip * -x .git README.md
 
 
       - name: Set zip Suffix
         id: suffix
         run: |
           echo "value=${{ github.event.inputs.VFS == 'true' && '_VFS' || '' }}${{ github.event.inputs.ZRAM == 'true' && '_LZ4KD' || '' }}${{ github.event.inputs.KPM == 'true' && '_KPM' || '' }}${{ github.event.inputs.SCHED== 'true' && '_SCHED' || '' }}" >> $GITHUB_OUTPUT
-
-
+      
       - name: Upload Kernel Zip
         uses: actions/upload-artifact@v4
         with:
