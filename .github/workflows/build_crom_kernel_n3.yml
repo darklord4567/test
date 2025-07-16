@@ -410,7 +410,7 @@ jobs:
       - name: Apply Hide Stuff Patches
         run: |
           cd kernel_workspace/kernel-5.10
-          cp ../../SukiSU_patch/69_hide_stuff.patch ./
+          cp ../SukiSU_patch/69_hide_stuff.patch ./
           echo "Applying hide stuff patch"
           patch -p1 -F 3 < 69_hide_stuff.patch
           echo "hide_stuff_patch complete"
