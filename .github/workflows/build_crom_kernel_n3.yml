@@ -499,6 +499,8 @@ jobs:
           pwd
           echo "ls cmd !!!!!!!!!"
           ls
+          export PATH="/usr/lib/ccache:$PATH"
+          export CC="ccache clang"
           ./build/build.sh
            ccache -s
 
