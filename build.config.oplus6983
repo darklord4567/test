@@ -18,12 +18,9 @@ Image.gz
 
 FILES="
 arch/arm64/boot/Image.gz
-arch/arm64/boot/dts/mediatek/mt6983.dtb
 vmlinux
 System.map
 vmlinux.symvers
-modules.builtin
-modules.builtin.modinfo
 "
 DTC='${OUT_DIR}/scripts/dtc/dtc'
 
