@@ -341,8 +341,8 @@ jobs:
       - name: Make AnyKernel3
         run: |
           git clone https://github.com/darklord4567/Anykernel3.git --depth=1
-          echo "Copying Image.gz to AnyKernel3/Crom/"
-          cp ${{ env.DIST_DIR }}/Image.gz AnyKernel3/Crom/Image.gz
+          echo "Copying Image.gz to Anykernel3/Crom/"
+          cp kernel_workspace/out/android12-5.10/kernel-5.10/arch/arm64/boot/Image.gz Anykernel3/Crom/Image.gz
 
 
       - name: Set zip Suffix
@@ -354,7 +354,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AnyKernel3_CROM_${{ env.KSUVER }}_${{ steps.file_clean.outputs.value }}${{ steps.suffix.outputs.value }}_LuffyOP⚡
-          path: ./AnyKernel3/Crom*
+          path: ./Anykernel3/Crom*
 
       - name: Post-build Disk Check
         run: df -h
