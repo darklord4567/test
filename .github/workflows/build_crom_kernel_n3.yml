@@ -290,7 +290,7 @@ jobs:
 
             chmod +x "$path"
           done
-
+          cd kernel-${{ env.KERNEL_VERSION }}
           git add -A
           git commit -m "Custom suffix & removed -dirty"
 
