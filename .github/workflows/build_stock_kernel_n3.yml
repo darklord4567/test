@@ -315,7 +315,7 @@ jobs:
           echo "ls"
           ls
           echo "cd to mtk !!!!!!!!"
-          cd ../../../secure/biometrics/fingerprints/bsp/drivers_kernel/component3.0/mtk
+          cd kernel_workspace/vendor/oplus/secure/biometrics/fingerprints/bsp/drivers_kernel/component3.0/mtk
           echo "pwd"
           pwd
           echo "ls"
