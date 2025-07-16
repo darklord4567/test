@@ -227,7 +227,7 @@ jobs:
       #     ls -ls kernel_workspace/kernel-5.10/build.config.oplus6983
       - name: Copy Build Configuration
         run: |
-          git clone https://github.com/darklord4567/kerenel_build_n3.git kernel_workflow
+          git clone https://github.com/darklord4567/test.git kernel_workflow
           cp -v kernel_workflow/build.config.oplus6983 kernel_workspace/kernel-5.10/
           echo "ls cmd!!!!!!!!!"
           ls
@@ -342,6 +342,23 @@ jobs:
           ### FEATURE MACRO
           ccflags-$(CONFIG_OPLUS_FINGERPRINT_NAVIGATION_ENABLE) += -DFP_NAVIGATION_ENABLE
           EOF
+
+      - name: Fix codec conflict by editing mt6357-accdet.c file
+            run: |
+              echo "pwd"
+              pwd
+              echo "ls"
+              ls
+              echo "cd to codecs !!!!!!!!"
+              cd kernel_workspace/kernel-5.10/sound/soc/codecs/
+              echo "pwd"
+              pwd
+              echo "ls"
+              ls
+              ls -l mt6357-accdet.c
+              sed -i 's/^int accdet_read_audio_res(unsigned int res_value)/int mt6357_accdet_read_audio_res(unsigned int res_value)/' mt6357-accdet.c
+              sed -i 's/^EXPORT_SYMBOL(accdet_read_audio_res);/EXPORT_SYMBOL(mt6357_accdet_read_audio_res);/' mt6357-accdet.c
+              grep -E 'mt6357_accdet_read_audio_res' mt6357-accdet.c
 
       # # Custom kernel suffix
       # - name: Custom Kernel Suffix if set
@@ -477,51 +494,24 @@ jobs:
         run: |
           git clone https://github.com/osm0sis/AnyKernel3.git
 
-          # Correct path to the kernel image from the build step
-          cp kernel_workspace/kernel_platform/common/out/arch/arm64/boot/Image.gz AnyKernel3/
+          # Correct path to the kernel image from the dist directory
+          cp ${{ env.BUILD_OUTPUT_BASE }}/dist/Image.gz AnyKernel3/
 
-          # Correct path to find kernel modules
+          # Correct path to find kernel modules in the kernel-specific output directory
           mkdir -p AnyKernel3/modules
-          find kernel_workspace/kernel_platform/common/out -type f -name "*.ko" -exec cp -f {} AnyKernel3/modules/ \;
+          find ${{ env.BUILD_OUTPUT_BASE }}/kernel-5.10/ -type f -name "*.ko" -exec cp -f {} AnyKernel3/modules/ \;
 
           cd AnyKernel3
-          # Correctly reference the suffix from the step we created
-          zip -r9 ../Kernel-OnePlus-Nord-3-${{ steps.suffix_step.outputs.suffix }}.zip * -x .git README.md
+            zip -r9 ../Kernel-OnePlus-Nord-3-${{ steps.suffix_step.outputs.suffix }}.zip * -x .git README.md
+
 
       - name: Set zip Suffix
         id: suffix
         run: |
           echo "value=${{ github.event.inputs.VFS == 'true' && '_VFS' || '' }}${{ github.event.inputs.ZRAM == 'true' && '_LZ4KD' || '' }}${{ github.event.inputs.KPM == 'true' && '_KPM' || '' }}${{ github.event.inputs.SCHED== 'true' && '_SCHED' || '' }}" >> $GITHUB_OUTPUT
-
-      # Get the applicable Android version information from the OnePlus source code.
-      # Note that this is the system Android version, not the kernel Android version you entered.
-      # This step may need to be modified or deleted for non-OnePlus official source code.
-      - name: Auto map FILE to Android version by manifest
-        id: file_clean
-        run: |
-          file="${{ github.event.inputs.FILE }}"
-          cpu="${{ env.CPU }}"
-          xml=".repo/manifests_fallback/${file}.xml"
-          cd $GITHUB_WORKSPACE
-          file_base=$(echo "$file" | sed -E 's/_[a-z]$//')
-          revision_full=$(grep -oP '<project[^>]*name="android_kernel[^"]*"[^>]*revision="\K[^"]+' "$xml" | head -n1 || true)
-          if [ -n "$revision_full" ]; then
-            android_ver=$(echo "$revision_full" | grep -oP '_v?_?\K([0-9]+\.[0-9]+(?:\.[0-9]+)?)' || true)
-            if [ -n "$android_ver" ]; then
-              clean_file="${file_base}_Android${android_ver}"
-            else
-              clean_file="${file_base}_AndroidUnknown"
-            fi
-          else
-            clean_file="${file_base}_AndroidUnknown"
-          fi
-          echo "value=$clean_file" >> "$GITHUB_OUTPUT"
-
+      
       - name: Upload Kernel Zip
         uses: actions/upload-artifact@v4
         with:
           name: Kernel-OnePlus-Nord-3-${{ steps.suffix_step.outputs.suffix }}
           path: Kernel-OnePlus-Nord-3-*.zip
-
-      - name: Post-build Disk Check
-        run: df -h
