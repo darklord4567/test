@@ -12,8 +12,8 @@
     <linkfile dest="kernel_platform/build_with_bazel.py" src="build_with_bazel.py"/>
   </project>
 
-  <project remote="origin" name="kernel_oneplus_sm8650-modules" path="./modules" revision="lineage-22.2"/>
+  <project remote="origin" name="kernel_oneplus_sm8650-modules" path="modules" revision="lineage-22.2"/>
 
-  <project remote="origin" name="kernel_oneplus_sm7675-devicetrees" path="./devicetrees" revision="lineage-22.2"/>
+  <project remote="origin" name="kernel_oneplus_sm7675-devicetrees" path="devicetrees" revision="lineage-22.2"/>
 
 </manifest>
