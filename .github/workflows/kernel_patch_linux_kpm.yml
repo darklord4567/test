@@ -41,7 +41,7 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           format: markdown
           message: |
-            *🚀 Patching Workflow Started*
+            *🚀 Patching KPM Workflow Started*
 
             *Triggered by build run:* #${{ github.event.workflow_run.id }}
             *Patching Run Link:* https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -74,57 +74,38 @@ jobs:
 
       - name: Make AnyKernel3 ZIP
         run: |
-          git clone https://github.com/darklord4567/Anykernel3_AOSP_NORD3.git --depth=1
-          cp downloaded-artifacts/${{ steps.find_artifact.outputs.artifact_name }}/Image.gz Anykernel3_AOSP_NORD3/Image.gz
+          git clone https://github.com/darklord4567/Anykernel3_STOCK_NORD3 --depth=1
+          cp downloaded-artifacts/${{ steps.find_artifact.outputs.artifact_name }}/Image.gz Anykernel3_STOCK_NORD3/Image.gz
 
       - name: Upload Patched Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.find_artifact.outputs.artifact_name }}_KPM-Patched
-          path: ./Anykernel3_AOSP_NORD3/*
+          path: ./Anykernel3_STOCK_NORD3/*
 
-  # --- THIS ENTIRE JOB IS NEW ---
   notify_result:
-    name: Notify Final Status
-    runs-on: ubuntu-latest
-    needs: release # This job runs after the 'release' job is done
-    if: always()   # This ensures it runs even if the 'release' job fails or is cancelled
-    steps:
-      - name: Notify on Success
-        if: success()
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID_PERSONAL }} # Notification to the personal
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          format: markdown
-          message: |
-            *✅ Patching Succeeded*
-
-            The patched kernel artifact is ready.
-            Starting the final release workflow...
-
-      - name: Notify on Failure
-        if: failure()
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID_PERSONAL }} # Alert to your personal chat
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          format: markdown
-          message: |
-            *❌ Patching Workflow Failed*
-
-            *Triggered by build run:* #${{ github.event.workflow_run.id }}
-            *Logs Link:* https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-      - name: Notify on Cancellation
-        if: cancelled()
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID_PERSONAL }} # Alert to your personal chat
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          format: markdown
-          message: |
-            *🚫 Patching Workflow Cancelled*
-
-            *Triggered by build run:* #${{ github.event.workflow_run.id }}
-            *Link to Run:* https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      name: Notify Patch Status
+      needs: release
+      if: always()
+      runs-on: ubuntu-latest
+      steps:
+        - name: Send Final Patch Notification
+          uses: appleboy/telegram-action@master
+          with:
+            to: ${{ needs.release.result == 'success' && secrets.TELEGRAM_CHAT_ID_PRIVATE2 || secrets.TELEGRAM_CHAT_ID_PERSONAL }}
+            token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+            format: markdown
+            message: |
+              ${{ needs.release.result == 'success' && format('✅ *Patching Successful*
+              ------------------------------------
+              The patched kernel artifact is ready. Starting the final `Create Kernel Release` workflow.') || '' }}
+              
+              ${{ needs.release.result == 'failure' && format('❌ *Patching Failed*
+              ------------------------------------
+              Please check the logs for details.
+              [View Logs](https://github.com/{0}/actions/runs/{1})', github.repository, github.run_id) || '' }}
+              
+              ${{ needs.release.result == 'cancelled' && format('🚫 *Patching Cancelled*
+              ------------------------------------
+              The patching process was cancelled.
+              [View Run](https://github.com/{0}/actions/runs/{1})', github.repository, github.run_id) || '' }}
