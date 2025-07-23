@@ -80,7 +80,7 @@ jobs:
       - name: Upload Patched Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.find_artifact.outputs.artifact_name }}_KPM-Patched
+          name: ${{ steps.find_artifact.outputs.artifact_name }}
           path: ./Anykernel3_STOCK_NORD3/*
 
   notify_result:
