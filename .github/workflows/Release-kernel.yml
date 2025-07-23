@@ -1,0 +1,123 @@
+name: Create Kernel Release
+
+on:
+  workflow_run:
+    workflows: ["Patch_Kernel_KPM"]
+    types:
+      - completed
+
+jobs:
+  release:
+    name: Create GitHub Release
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    env:
+      TZ: Asia/Kolkata
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Send Start Notification
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID_PERSONAL }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: markdown
+          message: |
+            *🚀 Release Workflow Started*
+
+            Triggered by patch run: #${{ github.event.workflow_run.id }}
+            Release Run Link: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Generate IST Release Tag
+        id: generate_tag
+        run: |
+          TAG="oneplus_nord_3-$(date +'%Y-%m-%d_%H-%M')-IST"
+          echo "Generated Tag: $TAG"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Download Patched Artifacts
+        run: |
+          echo "Downloading artifacts from Run ID ${{ github.event.workflow_run.id }}..."
+          gh run download ${{ github.event.workflow_run.id }} --dir ./downloaded-artifacts --repo ${{ github.repository }}
+
+      - name: Display Downloaded Artifact Structure
+        run: ls -R ./downloaded-artifacts
+
+      - name: Zip Each Artifact Individually
+        run: |
+          mkdir ./final-zips
+          for dir in ./downloaded-artifacts/*; do
+            if [ -d "$dir" ]; then
+              ARTIFACT_NAME=$(basename "$dir")
+              echo "Zipping artifact: $ARTIFACT_NAME"
+              (cd "$dir" && zip -r9 "$GITHUB_WORKSPACE/final-zips/${ARTIFACT_NAME}.zip" .)
+            fi
+          done
+
+      - name: Create GitHub Release and Upload Zips
+        env:
+          RELEASE_NOTES: |
+            # KPM FIX RELEASE!!!!!!
+            ### SukiSU Ultra Kernel for OnePlus Nord 3
+            
+            #### Flash this kernel on AOSP 
+            
+            **Flasher Recommendation:**
+            * [Kernel Flasher](https://github.com/fatalcoder524/KernelFlasher/releases)
+            
+            **Manager App:**
+            * [SukiSU-Ultra Manager](https://github.com/SukiSU-Ultra/SukiSU-Ultra/releases)
+
+            **Susfs Module:**
+            * [Susfs Module](https://github.com/sidex15/susfs4ksu-module/releases)
+        run: |
+          gh release create "${{ steps.generate_tag.outputs.tag }}" \
+            --title "Kernel Release for OnePlus Nord 3 - $(date +'%d %B %Y, %I:%M %p IST') - Version 1 " \
+            --notes "$RELEASE_NOTES" \
+            ./final-zips/*.zip
+
+  # This new job sends the final status notification
+  notify_result:
+    name: Notify Final Release Status
+    runs-on: ubuntu-latest
+    needs: release
+    if: always()
+    steps:
+      - name: Get Release Tag
+        if: success()
+        run: |
+          # This step re-generates the tag since it's in a different job
+          TAG="oneplus_nord_3-$(TZ='Asia/Kolkata' date +'%Y-%m-%d_%H-%M')-IST"
+          echo "release_tag=$TAG" >> $GITHUB_ENV
+          
+      - name: Notify on Success
+        if: success()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID_PRIVATE2 }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: markdown
+          message: |
+            *✅ Kernel Released Successfully!*
+
+            A new kernel has been released on GitHub.
+            *Release Link:* https://github.com/${{ github.repository }}/releases/tag/${{ env.release_tag }}
+
+      - name: Notify on Failure or Cancellation
+        if: failure() || cancelled()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID_PERSONAL }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: markdown
+          message: |
+            *❌ Release Workflow Failed or Cancelled*
+
+            The final step of releasing the kernel failed.
+            *Logs Link:* https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
