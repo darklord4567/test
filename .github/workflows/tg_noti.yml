@@ -18,60 +18,37 @@ jobs:
           RUN_ID: ${{ github.event.workflow_run.id }}
         run: |
           sudo apt-get update && sudo apt-get install -y jq
-
           API_URL="https://api.github.com/repos/${{ github.repository }}/actions/runs/$RUN_ID"
           response=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" "$API_URL")
-
           file=$(echo "$response" | jq -r '.triggering_actor.login + "/" + .display_title' | sed 's/For //')
-          
           echo "build_info=$file" >> $GITHUB_OUTPUT
 
-      - name: Send Release Message on Success
-        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+      - name: Send Result Notification
         uses: appleboy/telegram-action@master
         with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID_PRIVATE2 }}
+          to: ${{ github.event.workflow_run.conclusion == 'success' && secrets.TELEGRAM_CHAT_ID_PRIVATE2 || secrets.TELEGRAM_CHAT_ID_PERSONAL }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           format: markdown
           message: |
-            *🎉 Kernel Release*
+            ${{ github.event.workflow_run.conclusion == 'success' && format('✅ *Build Successful*
+            ------------------------------------
+            *Configuration:* `{0}`
+            *Commit:* `{1}`
+            ------------------------------------
+            The artifact is ready for the patching workflow.', steps.get_inputs.outputs.build_info, github.event.workflow_run.head_sha) || '' }}
 
-            *Configuration:* `${{ steps.get_inputs.outputs.build_info }}`
-            *Commit:* `${{ github.event.workflow_run.head_sha }}`
-            *Released at:* `$(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')` IST
-
-            *Download from Artifacts:*
-            https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
-
-      - name: Send Failure Message
-        if: ${{ github.event.workflow_run.conclusion == 'failure' }}
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID_PERSONAL }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          format: markdown
-          message: |
-            *❌ Workflow Failed*
-
-            *Configuration:* `${{ steps.get_inputs.outputs.build_info }}`
-            *Commit:* `${{ github.event.workflow_run.head_sha }}`
+            ${{ github.event.workflow_run.conclusion == 'failure' && format('❌ *Build Failed*
+            ------------------------------------
+            *Configuration:* `{0}`
+            *Commit:* `{1}`
+            ------------------------------------
+            Please check the logs for details.', steps.get_inputs.outputs.build_info, github.event.workflow_run.head_sha) || '' }}
             
-            *Reason:* See the workflow logs for details.
-            *Logs Link:* https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
+            ${{ github.event.workflow_run.conclusion == 'cancelled' && format('🚫 *Build Cancelled*
+            ------------------------------------
+            *Configuration:* `{0}`
+            *Commit:* `{1}`
+            ------------------------------------
+            The build was cancelled by a user.', steps.get_inputs.outputs.build_info, github.event.workflow_run.head_sha) || '' }}
 
-      # --- THIS IS THE NEW STEP ---
-      - name: Notify on Cancellation
-        if: ${{ github.event.workflow_run.conclusion == 'cancelled' }}
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID_PERSONAL }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          format: markdown
-          message: |
-            *🚫 Workflow Cancelled*
-
-            *Configuration:* `${{ steps.get_inputs.outputs.build_info }}`
-            *Commit:* `${{ github.event.workflow_run.head_sha }}`
-            *Cancelled by:* `${{ github.event.workflow_run.triggering_actor }}`
-            
-            *Link to Run:* https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
+            [View Completed Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }})
