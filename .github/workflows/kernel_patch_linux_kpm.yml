@@ -84,15 +84,14 @@ jobs:
         if: success()
         uses: appleboy/telegram-action@master
         with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID_PRIVATE2 }} # Release notification to the group
+          to: ${{ secrets.TELEGRAM_CHAT_ID_PERSONAL }} # Notification to the personal
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           format: markdown
           message: |
-            *✅ Patching Succeeded & Released*
+            *✅ Patching Succeeded*
 
-            *Triggered by build run:* #${{ github.event.workflow_run.id }}
-            *See the patched artifact here:*
-            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            The patched kernel artifact is ready.
+            Starting the final release workflow...
 
       - name: Notify on Failure
         if: failure()
