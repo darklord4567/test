@@ -2,7 +2,9 @@ name: Patch_Kernel_KPM
 
 on:
   workflow_run:
-    workflows: ["Build OnePlus Nord 3 Stock"]
+    workflows:
+      - "Build OnePlus Nord 3 Stock"
+      - "Build OnePlus Nord 3 Crom"
     types:
       - completed
 
