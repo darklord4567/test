@@ -24,11 +24,17 @@ on:
         default: true
 
 jobs:
-  # JOB 1: NOTIFY THAT THE WORKFLOW HAS STARTED
+# JOB 1: NOTIFY THAT THE WORKFLOW HAS STARTED
   notify_start:
     name: Notify Start 🚀
     runs-on: ubuntu-latest
     steps:
+      # This new step gets the current time in IST
+      - name: Get current time
+        id: get_time
+        run: echo "timestamp=$(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+
+      # This step now uses the time from the step above
       - name: Send Telegram message on start
         uses: appleboy/telegram-action@master
         with:
@@ -41,7 +47,8 @@ jobs:
             *Action:* `${{ github.workflow }}` (#${{ github.run_number }})
             *Commit:* `${{ github.sha }}`
             *Triggered by:* `${{ github.triggering_actor }}`
-            *Started at:* `$(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')` IST
+            *Started at:* `${{ steps.get_time.outputs.timestamp }}` IST
+            *Workflow Link:* https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
             
   build:
     name: ${{ github.event.inputs.FAST_BUILD == 'true' && ' [FAST]' || '' }}For ${{ github.event.inputs.FILE }} ${{ github.event.inputs.SUFFIX }}
