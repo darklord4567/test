@@ -75,6 +75,7 @@ jobs:
             *Workflow Link:* https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
             
   build:
+    needs: notify_start
     name: ${{ github.event.inputs.FAST_BUILD == 'true' && ' [FAST]' || '' }}For ${{ github.event.inputs.FILE }} ${{ github.event.inputs.SUFFIX }}
     runs-on: ubuntu-latest
     env:
