@@ -6,7 +6,11 @@ on:
     types:
       - completed
 
+# This 'if' condition must be at the top level (no indentation)
+if: vars.RUN_AUTOMATION_CHAIN == 'true'
+
 jobs:
+  # JOB 1: Checks if the previous workflow was successful
   check_trigger:
     name: Verify Patch Result
     runs-on: ubuntu-latest
@@ -16,6 +20,8 @@ jobs:
         run: |
           echo "Triggering patch workflow was not successful (conclusion: ${{ github.event.workflow_run.conclusion }}). Stopping."
           exit 1
+
+  # JOB 2: Performs the release. It depends on JOB 1.
   release:
     name: Create GitHub Release
     needs: check_trigger
@@ -26,6 +32,10 @@ jobs:
     env:
       TZ: Asia/Kolkata
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # This 'outputs' block makes the release tag available to other jobs
+    outputs:
+      release_tag: ${{ steps.generate_tag.outputs.tag }}
+
     steps:
       - name: Send Start Notification
         uses: appleboy/telegram-action@master
@@ -63,25 +73,23 @@ jobs:
           for dir in ./downloaded-artifacts/*; do
             if [ -d "$dir" ]; then
               ARTIFACT_NAME=$(basename "$dir")
-              echo "Zipping artifact: $ARTIFACT_NAME"
               (cd "$dir" && zip -r9 "$GITHUB_WORKSPACE/final-zips/${ARTIFACT_NAME}.zip" .)
             fi
           done
 
       - name: Create GitHub Release and Upload Zips
-        id: create_release
         env:
           RELEASE_NOTES: |
             ### SukiSU Ultra Kernel
             Flash on AOSP.
         run: |
-          TAG="oneplus_nord_3-$(date +'%Y-%m-%d_%H-%M')-IST"
-          echo "release_tag=$TAG" >> $GITHUB_OUTPUT
-          gh release create "$TAG" \
+          # Use the tag generated in the 'generate_tag' step
+          gh release create "${{ steps.generate_tag.outputs.tag }}" \
             --title "Kernel Release - $(date +'%d %B %Y')" \
             --notes "$RELEASE_NOTES" \
             ./final-zips/*.zip
             
+  # JOB 3: Sends the final notification. It depends on JOB 2.
   notify_result:
     name: Notify Final Release Status
     needs: release
