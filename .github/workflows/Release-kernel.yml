@@ -7,9 +7,19 @@ on:
       - completed
 
 jobs:
+    # Add the same check here to verify the Patch workflow
+  check_trigger:
+    name: Verify Patch Result
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if patch workflow was successful
+        if: github.event.workflow_run.conclusion != 'success'
+        run: |
+          echo "Triggering patch workflow was not successful (conclusion: ${{ github.event.workflow_run.conclusion }}). Stopping."
+          exit 1
   release:
     name: Create GitHub Release
-    if: github.event.workflow_run.conclusion == 'success'
+    needs: check_trigger
     runs-on: ubuntu-latest
     permissions:
       contents: write
