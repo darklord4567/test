@@ -4,15 +4,13 @@ on:
   workflow_run:
     workflows: ["Build OnePlus Nord 3 Stock"] # The 'name:' from your build file
     types:
-      - completed
+      - completed # This trigger runs for success, failure, and cancellations
 
 jobs:
   notify:
     name: Send Notification 🔔
     runs-on: ubuntu-latest
     steps:
-      # This step uses the GitHub API to get the inputs (FILE, SUFFIX, etc.)
-      # from the original workflow run, since they aren't available directly.
       - name: Fetch Workflow Inputs
         id: get_inputs
         env:
@@ -28,7 +26,6 @@ jobs:
           
           echo "build_info=$file" >> $GITHUB_OUTPUT
 
-      # This step runs on SUCCESS and sends to the PRIVATE2 chat
       - name: Send Release Message on Success
         if: ${{ github.event.workflow_run.conclusion == 'success' }}
         uses: appleboy/telegram-action@master
@@ -46,7 +43,6 @@ jobs:
             *Download from Artifacts:*
             https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
 
-      # This step runs on FAILURE and sends to your PERSONAL chat
       - name: Send Failure Message
         if: ${{ github.event.workflow_run.conclusion == 'failure' }}
         uses: appleboy/telegram-action@master
@@ -62,3 +58,20 @@ jobs:
             
             *Reason:* See the workflow logs for details.
             *Logs Link:* https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
+
+      # --- THIS IS THE NEW STEP ---
+      - name: Notify on Cancellation
+        if: ${{ github.event.workflow_run.conclusion == 'cancelled' }}
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID_PERSONAL }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: markdown
+          message: |
+            *🚫 Workflow Cancelled*
+
+            *Configuration:* `${{ steps.get_inputs.outputs.build_info }}`
+            *Commit:* `${{ github.event.workflow_run.head_sha }}`
+            *Cancelled by:* `${{ github.event.workflow_run.triggering_actor }}`
+            
+            *Link to Run:* https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
