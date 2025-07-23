@@ -1,25 +1,27 @@
-# Sourced configs for the base environment (DO NOT CHANGE)
+# Sourced configs for the base environment.
+# These set up the toolchain and basic variables.
 KERNEL_DIR=kernel-5.10
 . ${ROOT_DIR}/${KERNEL_DIR}/build.config.common
 . ${ROOT_DIR}/${KERNEL_DIR}/build.config.aarch64
 . ${ROOT_DIR}/${KERNEL_DIR}/build.config.lto_thin
 
-# Defconfig creation (DO NOT CHANGE)
+# This section creates the correct kernel .config by merging multiple files.
+# It is required for the kernel to know how it should be built.
 DEFCONFIG=oplus6983_defconfig
 PRE_DEFCONFIG_CMDS="KCONFIG_CONFIG=${ROOT_DIR}/${KERNEL_DIR}/arch/arm64/configs/${DEFCONFIG} ${ROOT_DIR}/${KERNEL_DIR}/scripts/kconfig/merge_config.sh -m -r ${ROOT_DIR}/${KERNEL_DIR}/arch/arm64/configs/gki_defconfig ${ROOT_DIR}/${KERNEL_DIR}/arch/arm64/configs/mgk_64_k510_defconfig ${ROOT_DIR}/${KERNEL_DIR}/kernel/configs/oplus6983.config"
 POST_DEFCONFIG_CMDS="rm ${ROOT_DIR}/${KERNEL_DIR}/arch/arm64/configs/${DEFCONFIG}"
 
-# --- MODIFIED: Set the build goal to only Image.gz ---
+# --- KEY MODIFICATIONS ---
+
+# 1. Set the specific build goal to ONLY Image.gz.
 MAKE_GOALS="Image.gz"
 
-# --- MODIFIED: Tell the script to only copy Image.gz to the dist folder ---
+# 2. Tell the script to ONLY copy the Image.gz file to the final dist folder.
 FILES="arch/arm64/boot/Image.gz"
 
-# GKI/ABI variables (can be left as is)
-ABI_OUT_TAG="mtk"
-KMI_SYMBOL_LIST=android/abi_gki_aarch64_mtk
-ADDITIONAL_KMI_SYMBOL_LISTS=android/abi_gki_aarch64_oplus_internal
-GKI_MODULES_LIST=android/gki_aarch64_modules
-ABI_DEFINITION=android/abi_gki_aarch64.xml
-
-# --- REMOVED: All EXT_MODULES definitions have been deleted to prevent module compilation. ---
+# 3. Forcefully disable all module-related steps. This is the crucial fix
+#    that prevents the "modules.order not found" error by overriding any
+#    settings from build.config.common.
+unset IN_KERNEL_MODULES
+unset BUILD_INITRAMFS
+unset EXT_MODULES
