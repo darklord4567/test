@@ -1,0 +1,80 @@
+name: Patch_Kernel_KPM
+
+on:
+  workflow_run:
+    workflows: ["Build OnePlus Nord 3 Stock"]
+    types:
+      - completed
+
+jobs:
+  release:
+    name: Create Release
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      # --- NEW NOTIFICATION STEPS START HERE ---
+      - name: Get current time
+        id: get_time
+        run: echo "timestamp=$(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+
+      - name: Send Start Notification
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID_PERSONAL }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: markdown
+          message: |
+            *🚀 Patching Workflow Started*
+
+            *Triggered by build run:* #${{ github.event.workflow_run.id }}
+            *Patching Run Link:* https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            *Started at:* `${{ steps.get_time.outputs.timestamp }}` IST
+      # --- NEW NOTIFICATION STEPS END HERE ---
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download Artifacts from Completed Build
+        run: |
+          echo "Downloading artifacts for Run ID ${{ github.event.workflow_run.id }}..."
+          gh run download ${{ github.event.workflow_run.id }} --dir ./downloaded-artifacts --repo ${{ github.repository }}
+      
+      - name: Find Artifact Name
+        id: find_artifact
+        run: |
+          ARTIFACT_DIR=$(ls -d ./downloaded-artifacts/*/)
+          ARTIFACT_NAME=$(basename "$ARTIFACT_DIR")
+          echo "Found artifact: $ARTIFACT_NAME"
+          echo "artifact_name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+
+      - name: Display Downloaded Artifact Structure
+        run: ls -R ./downloaded-artifacts
+
+      - name: Apply patch_linux and replace Image
+        run: |
+          cd downloaded-artifacts/${{ steps.find_artifact.outputs.artifact_name }}
+          curl -LO --retry 5 https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU_patch/main/kpm/patch_linux
+          chmod +x patch_linux
+          gzip -d Image.gz
+          ./patch_linux
+          rm -f Image.gz
+          mv oImage Image
+          gzip -f -9 Image
+
+      - name: Make AnyKernel3 ZIP
+        run: |
+          git clone https://github.com/darklord4567/Anykernel3_AOSP_NORD3.git --depth=1
+          echo "Copying patched Image.gz to AnyKernel3 folder"
+          cp downloaded-artifacts/${{ steps.find_artifact.outputs.artifact_name }}/Image.gz Anykernel3_AOSP_NORD3/Image.gz
+
+      - name: Upload Patched Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.find_artifact.outputs.artifact_name }}_KPM-Patched
+          path: ./Anykernel3_AOSP_NORD3/*
