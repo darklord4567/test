@@ -7,7 +7,6 @@ on:
       - completed
 
 jobs:
-    # Add the same check here to verify the Patch workflow
   check_trigger:
     name: Verify Patch Result
     runs-on: ubuntu-latest
@@ -27,7 +26,6 @@ jobs:
     env:
       TZ: Asia/Kolkata
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
     steps:
       - name: Send Start Notification
         uses: appleboy/telegram-action@master
@@ -36,11 +34,11 @@ jobs:
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           format: markdown
           message: |
-            *🚀 Release Workflow Started*
-
-            Triggered by patch run: #${{ github.event.workflow_run.id }}
-            Release Run Link: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
+            *🚀 Release Process Started*
+            ------------------------------------
+            This is the final step: creating the GitHub Release.
+            [View Release Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -71,63 +69,46 @@ jobs:
           done
 
       - name: Create GitHub Release and Upload Zips
+        id: create_release
         env:
           RELEASE_NOTES: |
-            # KPM FIX RELEASE!!!!!!
-            ### SukiSU Ultra Kernel for OnePlus Nord 3
-            
-            #### Flash this kernel on AOSP 
-            
-            **Flasher Recommendation:**
-            * [Kernel Flasher](https://github.com/fatalcoder524/KernelFlasher/releases)
-            
-            **Manager App:**
-            * [SukiSU-Ultra Manager](https://github.com/SukiSU-Ultra/SukiSU-Ultra/releases)
-
-            **Susfs Module:**
-            * [Susfs Module](https://github.com/sidex15/susfs4ksu-module/releases)
+            ### SukiSU Ultra Kernel
+            Flash on AOSP.
         run: |
-          gh release create "${{ steps.generate_tag.outputs.tag }}" \
-            --title "Kernel Release for OnePlus Nord 3 - $(date +'%d %B %Y, %I:%M %p IST') - Version 1 " \
+          TAG="oneplus_nord_3-$(date +'%Y-%m-%d_%H-%M')-IST"
+          echo "release_tag=$TAG" >> $GITHUB_OUTPUT
+          gh release create "$TAG" \
+            --title "Kernel Release - $(date +'%d %B %Y')" \
             --notes "$RELEASE_NOTES" \
             ./final-zips/*.zip
-
-  # This new job sends the final status notification
+            
   notify_result:
     name: Notify Final Release Status
-    runs-on: ubuntu-latest
     needs: release
     if: always()
+    runs-on: ubuntu-latest
     steps:
-      - name: Get Release Tag
-        if: success()
-        run: |
-          # This step re-generates the tag since it's in a different job
-          TAG="oneplus_nord_3-$(TZ='Asia/Kolkata' date +'%Y-%m-%d_%H-%M')-IST"
-          echo "release_tag=$TAG" >> $GITHUB_ENV
-          
-      - name: Notify on Success
-        if: success()
+      - name: Send Final Release Notification
         uses: appleboy/telegram-action@master
         with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID_PRIVATE2 }}
+          to: ${{ needs.release.result == 'success' && secrets.TELEGRAM_CHAT_ID_PRIVATE2 || secrets.TELEGRAM_CHAT_ID_PERSONAL }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           format: markdown
           message: |
-            *✅ Kernel Released Successfully!*
+            ${{ needs.release.result == 'success' && format('🎉 *New Kernel Release!*
+            ------------------------------------
+            A new kernel has been successfully built, patched, and released.
 
-            A new kernel has been released on GitHub.
-            *Release Link:* https://github.com/${{ github.repository }}/releases/tag/${{ env.release_tag }}
+            *Release Tag:* `{0}`
+            ------------------------------------
+            [⬇️ Download from GitHub Releases](https://github.com/{1}/releases/tag/{0})', needs.release.outputs.release_tag, github.repository) || '' }}
 
-      - name: Notify on Failure or Cancellation
-        if: failure() || cancelled()
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID_PERSONAL }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          format: markdown
-          message: |
-            *❌ Release Workflow Failed or Cancelled*
+            ${{ needs.release.result == 'failure' && format('❌ *Release Failed!*
+            ------------------------------------
+            The final step of creating the GitHub Release failed. Check logs for details.
+            [View Logs](https://github.com/{0}/actions/runs/{1})', github.repository, github.run_id) || '' }}
 
-            The final step of releasing the kernel failed.
-            *Logs Link:* https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            ${{ needs.release.result == 'cancelled' && format('🚫 *Release Cancelled*
+            ------------------------------------
+            The final release process was cancelled.
+            [View Run](https://github.com/{0}/actions/runs/{1})', github.repository, github.run_id) || '' }}
