@@ -1,0 +1,64 @@
+name: Send Build Notifications
+
+on:
+  workflow_run:
+    workflows: ["Build OnePlus Nord 3 Stock"] # The 'name:' from your build file
+    types:
+      - completed
+
+jobs:
+  notify:
+    name: Send Notification 🔔
+    runs-on: ubuntu-latest
+    steps:
+      # This step uses the GitHub API to get the inputs (FILE, SUFFIX, etc.)
+      # from the original workflow run, since they aren't available directly.
+      - name: Fetch Workflow Inputs
+        id: get_inputs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+
+          API_URL="https://api.github.com/repos/${{ github.repository }}/actions/runs/$RUN_ID"
+          response=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" "$API_URL")
+
+          file=$(echo "$response" | jq -r '.triggering_actor.login + "/" + .display_title' | sed 's/For //')
+          
+          echo "build_info=$file" >> $GITHUB_OUTPUT
+
+      # This step runs on SUCCESS and sends to the PRIVATE2 chat
+      - name: Send Release Message on Success
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID_PRIVATE2 }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: markdown
+          message: |
+            *🎉 Kernel Release*
+
+            *Configuration:* `${{ steps.get_inputs.outputs.build_info }}`
+            *Commit:* `${{ github.event.workflow_run.head_sha }}`
+            *Released at:* `$(TZ='Asia/Kolkata' date +'%Y-%m-%d %H:%M:%S')` IST
+
+            *Download from Artifacts:*
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
+
+      # This step runs on FAILURE and sends to your PERSONAL chat
+      - name: Send Failure Message
+        if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID_PERSONAL }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: markdown
+          message: |
+            *❌ Workflow Failed*
+
+            *Configuration:* `${{ steps.get_inputs.outputs.build_info }}`
+            *Commit:* `${{ github.event.workflow_run.head_sha }}`
+            
+            *Reason:* See the workflow logs for details.
+            *Logs Link:* https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
