@@ -408,15 +408,14 @@ jobs:
       - name: Custom Kernel Suffix if set
         if: ${{ github.event.inputs.SUFFIX != '' }}
         run: |
+
           cd kernel_workspace
           SUFFIX="${{ github.event.inputs.SUFFIX }}"
           ANDROID_VERSION="${{ env.ANDROID_VERSION }}"
           FAST_BUILD="${{ github.event.inputs.FAST_BUILD }}"
 
           for path in \
-            kernel_platform/common/scripts/setlocalversion \
-            kernel_platform/msm-kernel/scripts/setlocalversion \
-            kernel_platform/external/dtc/scripts/setlocalversion; do
+            kernel-${{ env.KERNEL_VERSION }}/scripts/setlocalversion; do
 
             [ -f "$path" ] || continue
 
@@ -437,7 +436,7 @@ jobs:
                 sed -i "s/^res=.*/res=\"-${ANDROID_VERSION}-${SUFFIX}\"/" "$path"
               else
                 echo "Standard build: injecting suffix via cut/echo"
-                if [[ -f ./kernel_platform/build_with_bazel.py ]]; then
+                if [[ -f ./kernel-5.10/build_with_bazel.py ]]; then
                   echo "When using the official script and building with build_with_bazel, the build may fail due to a limit on the number of special characters. Please modify the configuration if that happens."
                 fi
                 tac "$path" | sed "0,/echo \"\\\$res\"/s//res=\\\$(echo \\\$res | cut -d- -f1-2)-${SUFFIX}; echo \"\\\$res\";/" | tac > "$path.tmp" && mv "$path.tmp" "$path"
@@ -449,10 +448,9 @@ jobs:
 
             chmod +x "$path"
           done
-
+          cd kernel-${{ env.KERNEL_VERSION }}
           git add -A
           git commit -m "Custom suffix & removed -dirty"
-
 
       - name: Add SukiSU Ultra
         run: |
