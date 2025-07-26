@@ -8,6 +8,7 @@ on:
         required: true
         default: oneplus_nord_5_v
         options:
+          - oneplus_nord_5_v
           - oneplus_nord_ce4_lite_5g_v
           - oneplus_nord_ce4_v
           - oneplus_nord_4_v
@@ -47,7 +48,7 @@ on:
         type: string
         description: "Branch name/Custom version identifier"
         required: false
-        default: "susfs-main/Numbersf"
+        default: "susfs-main/LuffyOP⚡"
       BUILD_TIME:
         type: string
         description: "Custom build time (Enter F to use current time)"
@@ -57,7 +58,7 @@ on:
         type: string
         description: "Custom kernel suffix (leave empty for a random string)"
         required: false
-        default: "LuffyOP_SukiSU_"
+        default: "LuffyOP⚡_SukiSU"
       FAST_BUILD:
         type: boolean
         description: "Enable fast build?"
